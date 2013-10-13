@@ -13,23 +13,35 @@ function Controller(){
 			this.go = function() {
 				//this.position.x += step;
 			};
+
+			this.stop = function(){
+				//this = null;
+			}
 		},
 
 		Nature: function(name, life){
 			this.name = name;
 			this.life = life;
-			
+			this.alive = true;
 			this.go = function(time, controller){
 				var that = this;
 
 				var interval = setInterval(function(){
-					if (that.life === 0) {
+					if (that.life === 0 && that.alive) {
+						console.log(that.life+': '+that.alive);
 						var pos = that.position;
+						var personages = controller.personages;
 						$('div.cell[position="'+pos.x+','+pos.y+'"]').removeClass(that.name);
 
 						controller.positions[that.index] = pos.x+','+pos.y;
+						
+						$.each(personages, function(i){
+							if (personages[i] === that) {
+								personages.splice(i, 1);
+							}
+						});
 
-						var item = new controller.Nature(that.name, controller.values.life[that.name]);
+						var item = new controller.Nature(that.name, controller.values().life[that.name]);
 
 						var newitem = controller.rednerNature(item);
 						controller.start(newitem);
@@ -37,10 +49,15 @@ function Controller(){
 						clearInterval(interval);
 
 					} else {
+						console.log(that.alive);
 						that.life--;
 					}
 				}, time);
 			};
+
+			this.stop = function(){
+				this.go = function(){};
+			}
 		},
 
 		setDefault: function(){
@@ -55,38 +72,41 @@ function Controller(){
 		},
 
 		positions: [],
+		personages: [],
 
-		values: {
-			tree: $('input[name="item-tree"]').val(),
-			bush: $('input[name="item-bush"]').val(),
-			time: $('input[name="time"]').val(),
+		values: function(){
+			return {
+				tree: $('input[name="item-tree"]').val(),
+				bush: $('input[name="item-bush"]').val(),
+				time: $('input[name="time"]').val(),
 
-			life: {
-				tree: $('input[name="life-tree"]').val(),
-				bush: $('input[name="life-bush"]').val()
-			},
+				life: {
+					tree: $('input[name="life-tree"]').val(),
+					bush: $('input[name="life-bush"]').val()
+				},
 
-			steps: {
-				wolf: $('input[name="step-wolf"]').val(),
-				hare: $('input[name="step-hare"]').val()	
-			},
+				steps: {
+					wolf: $('input[name="step-wolf"]').val(),
+					hare: $('input[name="step-hare"]').val()	
+				},
 
-			grid: {
-				rows: $('input[name="grid-rows"]').val(),
-				cols: $('input[name="grid-cols"]').val()
+				grid: {
+					rows: $('input[name="grid-rows"]').val(),
+					cols: $('input[name="grid-cols"]').val()
+				}
 			}
 		},
 
 		gridRender: function(){
 			this.positions = [];
-			var count = this.values;
-			var grid = this.values.grid;
+
+			var grid = this.values().grid;
 			var container = document.getElementById('grid-container');
 			var w = $(container).css('width');
 			var h = $(container).css('height');
 
 			var el = document.createElement('div');
-			
+			console.log(grid);
 			for (var r = 0; r < grid.rows; r++) {
 				var row = document.createElement('div');
 				row.display = 'block';
@@ -111,10 +131,12 @@ function Controller(){
 		},
 
 		rednerNature: function(item){
-			console.log(item);
+			// console.log(item);
 
-			var newitem = new this.Nature(item.name, this.values.life[item.name]);
+			var newitem = new this.Nature(item.name, this.values().life[item.name]);
 			newitem = this.setPosition(newitem);
+			
+			this.personages.push(newitem);
 
 			return newitem;
 		},
@@ -154,22 +176,34 @@ function Controller(){
 			return item;
 		},
 
-		start: function(items){
+		start: function(item){
 			var that = this;
 			//console.log(items);
-			if (items.length > 1) {
+			if (item.length > 1) {
 				console.log('start all items together');
-				$.each(items, function(i){
-					items[i].go((that.values.time)*1000, that);
+				$.each(item, function(i){
+					item[i].go((that.values().time)*1000, that);
 				});
 			} else {
-				console.log(items);
-				items.go((that.values.time)*1000, that);
+				//console.log(items);
+				item.go((that.values().time)*1000, that);
 			}
 		},
 
 		stop: function(){
 			console.log('stop');
+			console.log(this.personages);
+			
+			clearInterval(this.interval);
+			var items = this.personages;
+			$.each(items, function(i){
+				if (items[i].alive){
+					items[i].alive = false;
+				}
+				//items[i].stop();
+			});
+
+			//this.personages = [];
 		}
 	}
 };
@@ -179,8 +213,8 @@ $(document).ready(function(){
 
 	$('input[name="grid-rows"]').val(10);
 	$('input[name="grid-cols"]').val(10);
-	$('input[name="item-tree"]').val(3);
-	$('input[name="item-bush"]').val(2);
+	$('input[name="item-tree"]').val(4);
+	$('input[name="item-bush"]').val(3);
 	$('input[name="life-tree"]').val(4);
 	$('input[name="life-bush"]').val(2);
 	$('input[name="step-wolf"]').val(2);
@@ -188,43 +222,43 @@ $(document).ready(function(){
 	$('input[name="time"]').val(1);
 
 	var controller = new Controller();
-	var wolf = new controller.Animal('wolf', controller.values.steps.wolf);
-	var hare = new controller.Animal('hare', controller.values.steps.hare);
-	var tree = new controller.Nature('tree', controller.values.life.tree);
-	var bush = new controller.Nature('bush', controller.values.life.bush);
+	var wolf = new controller.Animal('wolf', controller.values().steps.wolf);
+	var hare = new controller.Animal('hare', controller.values().steps.hare);
+	var tree = new controller.Nature('tree', controller.values().life.tree);
+	var bush = new controller.Nature('bush', controller.values().life.bush);
 
 	//controller.setDefault();
 	controller.gridRender();
 	controller.setPosition(wolf);
 	controller.setPosition(hare);
 
-	function renderNatureItems(tree, bush){
+	function renderNatureItems(data){
 		var items = [];
-		for (var i=0; i < controller.values[tree.name]; i++) {
-			var item = controller.rednerNature(tree);
-			console.log(item);
-			items.push(item);
-		}
-
-		for (var i=0; i < controller.values[bush.name]; i++) {
-			var item = controller.rednerNature(bush);
-			items.push(item);
-		}
-
+		
+		$.each(data, function(i){
+			console.log(data[i].name);
+			var item = data[i];
+			for (var i=0; i < controller.values()[item.name]; i++) {
+				var item = controller.rednerNature(item);
+				// console.log(item);
+				items.push(item);
+			}
+		});
+		
 		return items;
 	};
 
-	renderNatureItems(tree, bush);
-
-	var natureItems = [];
+	var natureItems = renderNatureItems([tree, bush]);
 
 	$('#render').click(function(){
 		$('#grid-container').html('');
+		controller.personages = [];
+
 		controller.gridRender();
 		controller.setPosition(wolf);
 		controller.setPosition(hare);
 
-		natureItems = renderNatureItems(tree, bush);
+		natureItems = renderNatureItems([tree, bush]);
 		console.log(natureItems);
 
 	});
