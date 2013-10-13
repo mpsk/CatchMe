@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="style.css">
+
+	<link rel="stylesheet" href="libs/uikit/css/uikit.min.css">
+	<link rel="stylesheet" href="libs/uikit/css/uikit.almost-flat.min.css">
+	<link rel="stylesheet" href="libs/uikit/css/uikit.gradient.min.css">
+	<script src="libs/jquery-1.10.2.min.js"></script>
+	<script src="libs/uikit/js/uikit.min.js"></script>
+
+	<script src="game.js"></script>
+	
+
+</head>
+<body>
+	<section id="grid-container">
+	</section>
+
+	<section class="controls">
+		<b><center>Settings</center></b>
+		<form class="uk-form">
+			<div>
+				<span>Grid rows:</span>
+				<input type="text" name="grid-rows">
+			</div>
+			<div>
+				<span>Grid cols:</span>
+				<input type="text" name="grid-cols">
+			</div>
+			<hr>
+			<div>
+				<span>Num. of Trees:</span>
+				<input type="text" name="item-tree">
+			</div>
+			<div>
+				<span>Num. of Bush:</span>
+				<input type="text" name="item-bush">
+			</div>
+			<div>
+				<span>Tree`s life:</span>
+				<input type="text" name="life-tree">
+			</div>
+			<div>
+				<span>Bush`s life:</span>
+				<input type="text" name="life-bush">
+			</div>
+			<hr>
+			<div>
+				<span>Wolf steps:</span>
+				<input type="text" name="step-wolf">
+			</div>
+			<div>
+				<span>Hare steps:</span>
+				<input type="text" name="step-hare">
+			</div>
+			<hr>
+			<div>
+				<span>Time for steps (sec):</span>
+				<input type="text" name="time">
+			</div>
+		</form>
+		<div class="uk-button-group">
+			<button class="uk-button uk-button-success" id='render'>Render</button>
+			<button class="uk-button uk-button-success" id='start'>Start</button>
+			<button class="uk-button uk-button-success" id='stop'>Stop</button>
+		</div>
+	</section>
+</body>
+</html>

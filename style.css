@@ -1,0 +1,66 @@
+body {
+	margin: 0 auto !important;
+	width: 800px;
+}
+
+section#grid-container{
+	border: 1px solid green;
+	float: left;
+	margin: 10px;
+	width: 60%;
+}
+
+div.cell {
+	border: 1px solid #EEE;
+}
+
+section.controls {
+	border: 1px solid #CCC;
+	border-radius: 5px;
+	float: right;
+	margin: 10px;
+	width: 34%;
+}	
+
+	section.controls input{
+		width: 40%;
+	}
+
+	section.controls form {
+		padding: 5px;
+		margin-bottom: 10px;
+	}
+
+	section.controls div {
+		margin: 5px;
+		padding-top: 5px;
+		padding-bottom: 5px;
+	}
+
+	section.controls div input{
+		float: right;
+	}
+
+	section.controls div button{
+		width: 48%;
+	}
+
+div.cell{
+	color: #EEE;
+}
+
+div.cell.tree{
+	background: #267F00;
+}
+
+div.cell.bush{
+	background: #60FF63;
+}
+
+div.cell.wolf{
+	background: #00137F;
+}
+
+div.cell.hare{
+	background: #404040;
+}
