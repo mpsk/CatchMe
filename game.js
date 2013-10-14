@@ -1,6 +1,8 @@
 "use strict";
 
 function Controller(){
+	$('#start').attr('disabled', true);
+
 	return {
 		Animal: function(name, step){
 			this.name = name;
@@ -10,13 +12,16 @@ function Controller(){
 				//return setPosition();
 			})();
 
-			this.go = function() {
-				//this.position.x += step;
-			};
+			this.go = function(time, controller) {
+				var that = this;
+				console.log(controller);
+				// var interval = setInterval(function(){
+				// 	var pos = that.position;
+				// 	//var personages = controller.personages;
+				// 	$('div.cell[position="'+pos.x+','+pos.y+'"]').removeClass(that.name);
 
-			this.stop = function(){
-				//this = null;
-			}
+				// }, time);
+			};
 		},
 
 		Nature: function(name, life){
@@ -28,7 +33,7 @@ function Controller(){
 
 				var interval = setInterval(function(){
 					if (that.life === 0 && that.alive) {
-						console.log(that.life+': '+that.alive);
+
 						var pos = that.position;
 						var personages = controller.personages;
 						$('div.cell[position="'+pos.x+','+pos.y+'"]').removeClass(that.name);
@@ -42,22 +47,17 @@ function Controller(){
 						});
 
 						var item = new controller.Nature(that.name, controller.values().life[that.name]);
-
 						var newitem = controller.rednerNature(item);
 						controller.start(newitem);
 
 						clearInterval(interval);
 
-					} else {
-						console.log(that.alive);
+					} else if (that.alive){
 						that.life--;
 					}
+
 				}, time);
 			};
-
-			this.stop = function(){
-				this.go = function(){};
-			}
 		},
 
 		setDefault: function(){
@@ -181,29 +181,26 @@ function Controller(){
 			//console.log(items);
 			if (item.length > 1) {
 				console.log('start all items together');
+				//console.log(that);
 				$.each(item, function(i){
 					item[i].go((that.values().time)*1000, that);
 				});
 			} else {
 				//console.log(items);
+				console.log('every item');
 				item.go((that.values().time)*1000, that);
 			}
 		},
 
 		stop: function(){
-			console.log('stop');
-			console.log(this.personages);
-			
-			clearInterval(this.interval);
 			var items = this.personages;
 			$.each(items, function(i){
 				if (items[i].alive){
 					items[i].alive = false;
+					delete items[i];
 				}
-				//items[i].stop();
 			});
-
-			//this.personages = [];
+			this.personages = [];
 		}
 	}
 };
@@ -227,10 +224,18 @@ $(document).ready(function(){
 	var tree = new controller.Nature('tree', controller.values().life.tree);
 	var bush = new controller.Nature('bush', controller.values().life.bush);
 
-	//controller.setDefault();
-	controller.gridRender();
-	controller.setPosition(wolf);
-	controller.setPosition(hare);
+	hare.go = function(time, controller){
+		console.log(controller.values().time, controller);
+		console.log('run from wolf');
+	};
+
+	// -------------------
+	// controller.setDefault();
+	// controller.gridRender();
+	// controller.setPosition(wolf);
+	// controller.setPosition(hare);
+	// $('#start').attr('disabled', true);
+	// -------------------
 
 	function renderNatureItems(data){
 		var items = [];
@@ -252,16 +257,23 @@ $(document).ready(function(){
 
 	$('#render').click(function(){
 		$('#grid-container').html('');
+		$('#start').attr('disabled', false);
+
 		controller.personages = [];
 
 		controller.gridRender();
 		controller.setPosition(wolf);
 		controller.setPosition(hare);
 
-		natureItems = renderNatureItems([tree, bush]);
+		var natureItems = renderNatureItems([tree, bush]);
+		natureItems.push(wolf);
+		natureItems.push(hare);
+
 		console.log(natureItems);
 
 	});
+
+	$('#render').click();
 
 	$('#start').click(function(){
 		controller.start(natureItems);
@@ -269,6 +281,7 @@ $(document).ready(function(){
 
 	$('#stop').click(function(){
 		controller.stop();
+		$('#start').attr('disabled', true);
 	});
 
 	wolf.go();
