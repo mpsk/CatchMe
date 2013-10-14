@@ -178,6 +178,74 @@ function Controller(){
 				}
 			});
 			this.treesAndBushes = [];
+		},
+
+		wolfGo: function(time, controller) {
+			var that = this;
+
+			var interval = setInterval(function() {
+				if (that.alive) {
+					var pos = that.position,
+						treesAndBushes = controller.treesAndBushes,
+						personages = controller.personages,
+						hare, catched;
+
+					$.each(personages, function(i) {
+						if (personages[i].name === 'hare') {
+							hare = personages[i];
+						}
+					});
+
+					if ((Math.abs(that.position.x - hare.position.x) === 0 
+						|| Math.abs(that.position.x - hare.position.x) === 1) 
+						&& (Math.abs(that.position.y - hare.position.y) === 0 
+						|| Math.abs(that.position.y - hare.position.y) === 1)) {
+						
+						console.log('catched');
+						controller.stop();
+						clearInterval(interval);
+						return;
+					}
+
+					var getXY = function(coor) {
+						if (that.position[coor] < hare.position[coor]) {
+							return 1;
+						} else if (that.position[coor] > hare.position[coor]) {
+							return -1;
+						} else {
+							return 0;
+						}
+					};
+
+					$('div.cell[position="' + pos.x + ',' + pos.y + '"]').removeClass(that.name);
+					controller.positions[that.index] = pos.x + ',' + pos.y;
+					//console.log(that.index, that.position);
+					//console.log(hare.position);
+
+					var x = getXY('x');
+					var y = getXY('y');
+
+					that.position = {
+						x: parseInt(pos.x) + x,
+						y: parseInt(pos.y) + y
+					};
+					//console.log(that.position);
+
+					var newpos = that.position;
+					that.index = (newpos.x).toString() + (newpos.y).toString();
+
+					$('div.cell[position="' + newpos.x + ',' + newpos.y + '"]').addClass(that.name);
+
+				} else {
+					console.log('wolf stopped');
+				}
+
+			}, time);
+		},
+
+		hareGo: function(time, controller){
+			console.log(controller.values().time, controller);
+			console.log('run from wolf');
 		}
 	}
 };
@@ -196,75 +264,6 @@ $(document).ready(function(){
 	$('input[name="time"]').val(1);
 
 	var controller = new Controller();
-	var wolf = new controller.Animal('wolf', controller.values().steps.wolf);
-	var hare = new controller.Animal('hare', controller.values().steps.hare);
-	var tree = new controller.Nature('tree', controller.values().life.tree);
-	var bush = new controller.Nature('bush', controller.values().life.bush);
-
-	wolf.go = function(time, controller) {
-		var that = this;
-
-		var interval = setInterval(function() {
-			if (that.alive) {				
-				var pos = that.position,
-					treesAndBushes = controller.treesAndBushes,
-					personages = controller.personages,
-					hare, catched;
-
-				$.each(personages, function(i) {
-					if (personages[i].name === 'hare') {
-						hare = personages[i];
-					}
-				});
-
-				if ( (Math.abs(that.position.x - hare.position.x) === 0 
-					||	Math.abs(that.position.x - hare.position.x) === 1) 
-					&& (Math.abs(that.position.y - hare.position.y) === 0 
-					|| Math.abs(that.position.y - hare.position.y) === 1) ) {
-					console.log('catched');
-					controller.stop();
-					clearInterval(interval);
-					return;
-				}
-
-				var getXY = function(coor) {
-					if (that.position[coor] < hare.position[coor]) {
-						return 1;
-					} else if (that.position[coor] > hare.position[coor]) {
-						return -1;
-					} else {
-						return 0;
-					}
-				};
-
-				$('div.cell[position="'+pos.x+','+pos.y+'"]').removeClass(that.name);
-				controller.positions[that.index] = pos.x+','+pos.y;
-				//console.log(that.index, that.position);
-				//console.log(hare.position);
-
-				var x = getXY('x');
-				var y = getXY('y');
-				
-				that.position = {x: parseInt(pos.x)+x, y: parseInt(pos.y)+y};
-				//console.log(that.position);
-
-				var newpos = that.position;
-				that.index = (newpos.x).toString() + (newpos.y).toString();
-
-				$('div.cell[position="'+newpos.x+','+newpos.y+'"]').addClass(that.name);
-
-			} else {
-				console.log('wolf stopped');
-			}
-
-		}, time);
-	};
-
-	hare.go = function(time, controller){
-		console.log(controller.values().time, controller);
-		console.log('run from wolf');
-	};
-
 
 	function renderNatureItems(data){
 		var items = [];
@@ -282,10 +281,17 @@ $(document).ready(function(){
 		return items;
 	};
 
-
+	var natureItems;
 	$('#render').click(function(){
 		$('#grid-container').html('');
 		$('#start').attr('disabled', false);
+
+		var wolf = new controller.Animal('wolf', controller.values().steps.wolf);
+		var hare = new controller.Animal('hare', controller.values().steps.hare);
+		var tree = new controller.Nature('tree', controller.values().life.tree);
+		var bush = new controller.Nature('bush', controller.values().life.bush);
+		wolf.go = controller.wolfGo;
+		hare.go = controller.hareGo;
 
 		controller.treesAndBushes = [];
 
@@ -301,7 +307,7 @@ $(document).ready(function(){
 
 	});
 
-	var natureItems = renderNatureItems([tree, bush]);
+	//var natureItems = renderNatureItems([tree, bush]);
 	$('#render').click();
 
 	$('#start').click(function(){
@@ -311,8 +317,8 @@ $(document).ready(function(){
 
 	$('#stop').click(function(){
 		controller.stop();
+		$(this).attr('disabled', true);
 		console.log(controller);
-		//$('#start').attr('disabled', true);
 	});
 
 });
