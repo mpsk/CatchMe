@@ -7,21 +7,7 @@ function Controller(){
 		Animal: function(name, step){
 			this.name = name;
 			this.step = step;
-
-			this.position = (function() {
-				//return setPosition();
-			})();
-
-			this.go = function(time, controller) {
-				var that = this;
-				console.log(controller);
-				// var interval = setInterval(function(){
-				// 	var pos = that.position;
-				// 	//var personages = controller.personages;
-				// 	$('div.cell[position="'+pos.x+','+pos.y+'"]').removeClass(that.name);
-
-				// }, time);
-			};
+			this.alive = true;
 		},
 
 		Nature: function(name, life){
@@ -33,16 +19,15 @@ function Controller(){
 
 				var interval = setInterval(function(){
 					if (that.life === 0 && that.alive) {
-
 						var pos = that.position;
-						var personages = controller.personages;
+						var treesAndBushes = controller.treesAndBushes;
 						$('div.cell[position="'+pos.x+','+pos.y+'"]').removeClass(that.name);
 
-						controller.positions[that.index] = pos.x+','+pos.y;
+						controller.positions[that.index] = pos.x+','+pos.y; // back free position
 						
-						$.each(personages, function(i){
-							if (personages[i] === that) {
-								personages.splice(i, 1);
+						$.each(treesAndBushes, function(i){
+							if (treesAndBushes[i] === that) {
+								treesAndBushes.splice(i, 1);
 							}
 						});
 
@@ -60,18 +45,8 @@ function Controller(){
 			};
 		},
 
-		setDefault: function(){
-			$('input[name="grid-rows"]').val(10);
-			$('input[name="grid-cols"]').val(10);
-			$('input[name="item-tree"]').val(3);
-			$('input[name="item-bush"]').val(2);
-			$('input[name="life-tree"]').val(5);
-			$('input[name="life-bush"]').val(4);
-			$('input[name="step-wolf"]').val(2);
-			$('input[name="step-hare"]').val(1);
-		},
-
 		positions: [],
+		treesAndBushes: [],
 		personages: [],
 
 		values: function(){
@@ -136,7 +111,7 @@ function Controller(){
 			var newitem = new this.Nature(item.name, this.values().life[item.name]);
 			newitem = this.setPosition(newitem);
 			
-			this.personages.push(newitem);
+			this.treesAndBushes.push(newitem);
 
 			return newitem;
 		},
@@ -173,6 +148,10 @@ function Controller(){
 				}
 			});
 
+			if (item.name === 'wolf' || item.name === 'hare') {
+				this.personages.push(item);
+			}
+
 			return item;
 		},
 
@@ -186,21 +165,19 @@ function Controller(){
 					item[i].go((that.values().time)*1000, that);
 				});
 			} else {
-				//console.log(items);
-				console.log('every item');
 				item.go((that.values().time)*1000, that);
 			}
 		},
 
 		stop: function(){
-			var items = this.personages;
+			var items = this.treesAndBushes.concat(this.personages);
 			$.each(items, function(i){
 				if (items[i].alive){
 					items[i].alive = false;
 					delete items[i];
 				}
 			});
-			this.personages = [];
+			this.treesAndBushes = [];
 		}
 	}
 };
@@ -224,18 +201,70 @@ $(document).ready(function(){
 	var tree = new controller.Nature('tree', controller.values().life.tree);
 	var bush = new controller.Nature('bush', controller.values().life.bush);
 
+	wolf.go = function(time, controller) {
+		var that = this;
+
+		var interval = setInterval(function() {
+			if (that.alive) {				
+				var pos = that.position,
+					treesAndBushes = controller.treesAndBushes,
+					personages = controller.personages,
+					hare, catched;
+
+				$.each(personages, function(i) {
+					if (personages[i].name === 'hare') {
+						hare = personages[i];
+					}
+				});
+
+				if ( (Math.abs(that.position.x - hare.position.x) === 0 
+					||	Math.abs(that.position.x - hare.position.x) === 1) 
+					&& (Math.abs(that.position.y - hare.position.y) === 0 
+					|| Math.abs(that.position.y - hare.position.y) === 1) ) {
+					console.log('catched');
+					controller.stop();
+					clearInterval(interval);
+					return;
+				}
+
+				var getXY = function(coor) {
+					if (that.position[coor] < hare.position[coor]) {
+						return 1;
+					} else if (that.position[coor] > hare.position[coor]) {
+						return -1;
+					} else {
+						return 0;
+					}
+				};
+
+				$('div.cell[position="'+pos.x+','+pos.y+'"]').removeClass(that.name);
+				controller.positions[that.index] = pos.x+','+pos.y;
+				//console.log(that.index, that.position);
+				//console.log(hare.position);
+
+				var x = getXY('x');
+				var y = getXY('y');
+				
+				that.position = {x: parseInt(pos.x)+x, y: parseInt(pos.y)+y};
+				//console.log(that.position);
+
+				var newpos = that.position;
+				that.index = (newpos.x).toString() + (newpos.y).toString();
+
+				$('div.cell[position="'+newpos.x+','+newpos.y+'"]').addClass(that.name);
+
+			} else {
+				console.log('wolf stopped');
+			}
+
+		}, time);
+	};
+
 	hare.go = function(time, controller){
 		console.log(controller.values().time, controller);
 		console.log('run from wolf');
 	};
 
-	// -------------------
-	// controller.setDefault();
-	// controller.gridRender();
-	// controller.setPosition(wolf);
-	// controller.setPosition(hare);
-	// $('#start').attr('disabled', true);
-	// -------------------
 
 	function renderNatureItems(data){
 		var items = [];
@@ -249,41 +278,41 @@ $(document).ready(function(){
 				items.push(item);
 			}
 		});
-		
+
 		return items;
 	};
 
-	var natureItems = renderNatureItems([tree, bush]);
 
 	$('#render').click(function(){
 		$('#grid-container').html('');
 		$('#start').attr('disabled', false);
 
-		controller.personages = [];
+		controller.treesAndBushes = [];
 
 		controller.gridRender();
 		controller.setPosition(wolf);
 		controller.setPosition(hare);
 
-		var natureItems = renderNatureItems([tree, bush]);
+		natureItems = renderNatureItems([tree, bush]);
 		natureItems.push(wolf);
-		natureItems.push(hare);
+		// natureItems.push(hare);
 
-		console.log(natureItems);
+		console.log(controller);
 
 	});
 
+	var natureItems = renderNatureItems([tree, bush]);
 	$('#render').click();
 
 	$('#start').click(function(){
 		controller.start(natureItems);
+		$(this).attr('disabled', true);
 	});
 
 	$('#stop').click(function(){
 		controller.stop();
-		$('#start').attr('disabled', true);
+		console.log(controller);
+		//$('#start').attr('disabled', true);
 	});
-
-	wolf.go();
 
 });
