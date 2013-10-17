@@ -2,6 +2,7 @@
 
 function Controller(){
 	$('#start').attr('disabled', true);
+	$('#stop').attr('disabled', true);
 
 	return {
 		Animal: function(name, step){
@@ -188,7 +189,7 @@ function Controller(){
 					var pos = that.position,
 						treesAndBushes = controller.treesAndBushes,
 						personages = controller.personages,
-						hare, catched;
+						hare;
 
 					$.each(personages, function(i) {
 						if (personages[i].name === 'hare') {
@@ -202,6 +203,7 @@ function Controller(){
 						|| Math.abs(that.position.y - hare.position.y) === 1)) {
 						
 						console.log('catched');
+						hare.alive = false;
 						controller.stop();
 						clearInterval(interval);
 						return;
@@ -240,12 +242,92 @@ function Controller(){
 					console.log('wolf stopped');
 				}
 
-			}, time);
+			}, time/controller.values().steps.wolf);
 		},
 
 		hareGo: function(time, controller){
-			console.log(controller.values().time, controller);
-			console.log('run from wolf');
+			var that = this;
+
+			var interval = setInterval(function(){
+				if (that.alive){
+					var pos = that.position,
+						treesAndBushes = controller.treesAndBushes,
+						personages = controller.personages,
+						wolf;
+
+					$.each(personages, function(i) {
+						if (personages[i].name === 'wolf') {
+							wolf = personages[i];
+						}
+					});
+
+					var getXY = function(x) {
+
+						var y = x === 'x' ? 'y' : 'x';
+
+						var ctrll = {x: controller.values().grid.rows - 1, y: controller.values().grid.cols - 1};
+
+						//console.log(ctrll);
+						console.log(that.position);
+
+						if (that.position[x] > wolf.position[x]) {
+							if (that.position[x] < ctrll[x] && that.position[x] > 0) {
+								return 1;
+							}
+							else if (that.position[x] === ctrll[x] || that.position[x] === 0){
+								parseInt(that.position[y]) += Math.random() < 0.5 ? -1 : 1;
+								return 0;
+							}
+							else { 
+								console.log(x+': error 1'); 
+								parseInt(that.position[y]) += Math.random() < 0.5 ? -1 : 1;
+								return 0;
+							}
+
+						} else if (that.position[x] < wolf.position[x]) {
+							if (that.position[x] < ctrll[x] && that.position[x] > 0) {
+								return -1;
+							}
+							else if (that.position[x] === ctrll[x] || that.position[x] === 0){
+								parseInt(that.position[y]) += Math.random() < 0.5 ? -1 : 1;
+								return 0;
+							} 
+							else { 
+								console.log(x+': error -1');
+								parseInt(that.position[y]) += Math.random() < 0.5 ? -1 : 1;
+								return 0;
+							}
+
+						} else {
+							//console.log(x+': error 0');
+							return 0;
+						}
+					};
+
+					$('div.cell[position="' + pos.x + ',' + pos.y + '"]').removeClass(that.name);
+					controller.positions[that.index] = pos.x + ',' + pos.y;
+
+					var x = getXY('x');
+					var y = getXY('y');
+
+					that.position = {
+						x: Math.abs(parseInt(pos.x) + x),
+						y: Math.abs(parseInt(pos.y) + y)
+					};
+
+					console.log(that.position);
+
+					var newpos = that.position;
+					that.index = (newpos.x).toString() + (newpos.y).toString();
+
+					$('div.cell[position="' + newpos.x + ',' + newpos.y + '"]').addClass(that.name);
+
+				} else {
+					console.log('hare stopped');
+					clearInterval(interval);
+				}
+
+			}, time/controller.values().steps.hare);
 		}
 	}
 };
@@ -259,8 +341,8 @@ $(document).ready(function(){
 	$('input[name="item-bush"]').val(3);
 	$('input[name="life-tree"]').val(4);
 	$('input[name="life-bush"]').val(2);
-	$('input[name="step-wolf"]').val(2);
-	$('input[name="step-hare"]').val(1);
+	$('input[name="step-wolf"]').val(3);
+	$('input[name="step-hare"]').val(2);
 	$('input[name="time"]').val(1);
 
 	var controller = new Controller();
@@ -283,8 +365,11 @@ $(document).ready(function(){
 
 	var natureItems;
 	$('#render').click(function(){
+		controller = new Controller();
+
 		$('#grid-container').html('');
 		$('#start').attr('disabled', false);
+		$('#stop').attr('disabled', false);
 
 		var wolf = new controller.Animal('wolf', controller.values().steps.wolf);
 		var hare = new controller.Animal('hare', controller.values().steps.hare);
@@ -301,7 +386,7 @@ $(document).ready(function(){
 
 		natureItems = renderNatureItems([tree, bush]);
 		natureItems.push(wolf);
-		// natureItems.push(hare);
+		natureItems.push(hare);
 
 		console.log(controller);
 
