@@ -85,7 +85,7 @@ function Controller(){
 			console.log(grid);
 			for (var r = 0; r < grid.rows; r++) {
 				var row = document.createElement('div');
-				row.display = 'block';
+				row.display = 'inline-block';
 
 				for (var c = 0; c < grid.cols; c++) {
 					var col = document.createElement('div');
@@ -95,7 +95,7 @@ function Controller(){
 					$(col).attr('position', r + ',' + c);
 
 					col.className = 'cell';
-					col.innerHTML = r + '' + c;
+					col.innerHTML = r + ',' + c;
 
 					this.positions.push(r + ',' + c);
 
@@ -107,10 +107,10 @@ function Controller(){
 		},
 
 		rednerNature: function(item){
-			// console.log(item);
-
 			var newitem = new this.Nature(item.name, this.values().life[item.name]);
 			newitem = this.setPosition(newitem);
+
+			newitem.life = Math.floor(Math.random()*this.values().life[item.name] + 1);
 			
 			this.treesAndBushes.push(newitem);
 
@@ -124,9 +124,6 @@ function Controller(){
 
 			$.each(locations, function(d) {
 				if (d === random) {
-					//console.log('Equal: ' + d);
-					//console.log(locations.length);
-
 					if (locations[d] === undefined){
 						that.setPosition(item);
 						return;
@@ -144,8 +141,6 @@ function Controller(){
 					$(cell).addClass(item.name);
 					
 					delete locations[d];
-					//console.log(cell);
-					//console.log(locations);
 				}
 			});
 
@@ -158,10 +153,8 @@ function Controller(){
 
 		start: function(item){
 			var that = this;
-			//console.log(items);
 			if (item.length > 1) {
 				console.log('start all items together');
-				//console.log(that);
 				$.each(item, function(i){
 					item[i].go((that.values().time)*1000, that);
 				});
@@ -172,13 +165,16 @@ function Controller(){
 
 		stop: function(){
 			var items = this.treesAndBushes.concat(this.personages);
+
 			$.each(items, function(i){
 				if (items[i].alive){
 					items[i].alive = false;
 					delete items[i];
 				}
 			});
+
 			this.treesAndBushes = [];
+			this.personages = [];
 		},
 
 		wolfGo: function(time, controller) {
@@ -201,10 +197,12 @@ function Controller(){
 						|| Math.abs(that.position.x - hare.position.x) === 1) 
 						&& (Math.abs(that.position.y - hare.position.y) === 0 
 						|| Math.abs(that.position.y - hare.position.y) === 1)) {
-						
-						console.log('catched');
+
 						hare.alive = false;
 						controller.stop();
+
+						alert('Hare is catched');
+
 						clearInterval(interval);
 						return;
 					}
@@ -219,7 +217,7 @@ function Controller(){
 						}
 					};
 	
-					var getposition = function(){
+					var getposition = function(repeat){
 
 						x = getXY('x');
 						y = getXY('y');
@@ -229,6 +227,12 @@ function Controller(){
 							y: Math.abs(parseInt(pos.y) + y)
 						};
 
+						if (repeat) {
+							var nx = Math.abs(parseInt(pos.x) + x) + (Math.random() < 0.5 ? 0 : Math.random() < 0.5 ? -1 : 1); 
+							var ny = Math.abs(parseInt(pos.y) + y) + (Math.random() < 0.5 ? 0 : Math.random() < 0.5 ? -1 : 1);
+							newpos = { x: nx, y: ny };
+						}
+
 						var newindex = newpos.x*controller.values().grid.cols + newpos.y;
 
 						if (controller.positions[newindex]) {
@@ -236,24 +240,14 @@ function Controller(){
 							controller.positions[that.index] = pos.x + ',' + pos.y;
 
 							that.index = newindex;
-							that.position = {
-								x: Math.abs(parseInt(pos.x) + x),
-								y: Math.abs(parseInt(pos.y) + y)
-							};
+							that.position = newpos;
 
 							delete controller.positions[that.index];
 							$('div.cell[position="' + newpos.x + ',' + newpos.y + '"]').addClass(that.name);
 
 						} else {
 							console.log(that.name, that.index, controller.positions[that.index]);
-							//controller.positions[oldindex] = oldpos;
-
-							// that.position = {
-							// 	x: x + Math.random() < 0.5 ? -1 : 0,
-							// 	y: y + Math.random() < 0.5 ? -1 : 0
-							// };
-							return false;
-							//getposition();
+							getposition('repeat');
 						}
 					};
 
@@ -287,24 +281,17 @@ function Controller(){
 						var y = x === 'x' ? 'y' : 'x';
 
 						var ctrll = {x: controller.values().grid.rows - 1, y: controller.values().grid.cols - 1};
-
-						//console.log(ctrll);
-						//console.log(that.position);
-
 						if (that.position[x] > wolf.position[x]) {
 							if (that.position[x] < ctrll[x] && that.position[x] > 0) {
 								return 1;
 							}
 							else if (that.position[x] === ctrll[x] || that.position[x] === 0){
 								var correct =  Math.random() < 0.5 ? -1 : 1;
-								//console.log(y + ': ' + correct);
 								parseInt(that.position[y]) + correct;
 								return 0;
 							}
 							else { 
-								//console.log(x+': error 1'); 
 								var correct =  Math.random() < 0.5 ? -1 : 1;
-								//
 								parseInt(that.position[y]) + correct;
 								return -1;
 							}
@@ -315,14 +302,11 @@ function Controller(){
 							}
 							else if (that.position[x] === ctrll[x] || that.position[x] === 0){
 								var correct =  Math.random() < 0.5 ? -1 : 1;
-								//console.log(y + ': ' + correct);
 								parseInt(that.position[y]) + correct;
 								return 0;
 							} 
 							else { 
-								//console.log(x+': error -1');
 								var correct =  Math.random() < 0.5 ? -1 : 1;
-								//console.log(y + ': ' + correct);
 								parseInt(that.position[y]) + correct;
 								return 0;
 							}
@@ -332,7 +316,7 @@ function Controller(){
 						}
 					};
 
-					var getposition = function(){
+					var getposition = function(repeat){
 
 						x = getXY('x');
 						y = getXY('y');	
@@ -342,6 +326,12 @@ function Controller(){
 							y: Math.abs(parseInt(pos.y) + y)
 						};
 
+						if (repeat) {
+							var nx = Math.abs(parseInt(pos.x) + x) + (Math.random() < 0.5 ? 0 : Math.random() < 0.5 ? -1 : 1); 
+							var ny = Math.abs(parseInt(pos.y) + y) + (Math.random() < 0.5 ? 0 : Math.random() < 0.5 ? -1 : 1);
+							newpos = { x: nx, y: ny };
+						}
+
 						var newindex = newpos.x*controller.values().grid.cols + newpos.y;
 
 						if (controller.positions[newindex]){
@@ -350,22 +340,13 @@ function Controller(){
 							controller.positions[that.index] = pos.x + ',' + pos.y;
 
 							that.index = newindex;
-							that.position = {
-								x: Math.abs(parseInt(pos.x) + x),
-								y: Math.abs(parseInt(pos.y) + y)
-							};
+							that.position = newpos;
 
 							delete controller.positions[that.index];
 							$('div.cell[position="' + newpos.x + ',' + newpos.y + '"]').addClass(that.name);
 
 						} else {
-							console.log(that.name, that.index, controller.positions[that.index]);
-							// that.position = {
-							// 	x: x + Math.random() < 0.5 ? 0 : 1, 
-							// 	y: y + Math.random() < 0.5 ? 0 : 1
-							// };
-							return false;
-							//getposition();
+							getposition('repeat');
 						}
 
 					};
@@ -385,10 +366,10 @@ function Controller(){
 
 $(document).ready(function(){
 
-	$('input[name="grid-rows"]').val(10);
-	$('input[name="grid-cols"]').val(10);
-	$('input[name="item-tree"]').val(4);
-	$('input[name="item-bush"]').val(5);
+	$('input[name="grid-rows"]').val(20);
+	$('input[name="grid-cols"]').val(20);
+	$('input[name="item-tree"]').val(8);
+	$('input[name="item-bush"]').val(6);
 	$('input[name="life-tree"]').val(6);
 	$('input[name="life-bush"]').val(4);
 	$('input[name="step-wolf"]').val(1);
@@ -442,7 +423,6 @@ $(document).ready(function(){
 
 	});
 
-	//var natureItems = renderNatureItems([tree, bush]);
 	$('#render').click();
 
 	$('#start').click(function(){
