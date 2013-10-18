@@ -189,7 +189,7 @@ function Controller(){
 					var pos = that.position,
 						treesAndBushes = controller.treesAndBushes,
 						personages = controller.personages,
-						hare;
+						hare, x, y, newpos, oldpos, oldindex;
 
 					$.each(personages, function(i) {
 						if (personages[i].name === 'hare') {
@@ -218,25 +218,46 @@ function Controller(){
 							return 0;
 						}
 					};
+	
+					var getposition = function(){
 
-					$('div.cell[position="' + pos.x + ',' + pos.y + '"]').removeClass(that.name);
-					controller.positions[that.index] = pos.x + ',' + pos.y;
-					//console.log(that.index, that.position);
-					//console.log(hare.position);
+						x = getXY('x');
+						y = getXY('y');
 
-					var x = getXY('x');
-					var y = getXY('y');
+						newpos = {
+							x: Math.abs(parseInt(pos.x) + x),
+							y: Math.abs(parseInt(pos.y) + y)
+						};
 
-					that.position = {
-						x: parseInt(pos.x) + x,
-						y: parseInt(pos.y) + y
+						var newindex = newpos.x*controller.values().grid.cols + newpos.y;
+
+						if (controller.positions[newindex]) {
+							$('div.cell[position="' + pos.x + ',' + pos.y + '"]').removeClass(that.name);
+							controller.positions[that.index] = pos.x + ',' + pos.y;
+
+							that.index = newindex;
+							that.position = {
+								x: Math.abs(parseInt(pos.x) + x),
+								y: Math.abs(parseInt(pos.y) + y)
+							};
+
+							delete controller.positions[that.index];
+							$('div.cell[position="' + newpos.x + ',' + newpos.y + '"]').addClass(that.name);
+
+						} else {
+							console.log(that.name, that.index, controller.positions[that.index]);
+							//controller.positions[oldindex] = oldpos;
+
+							// that.position = {
+							// 	x: x + Math.random() < 0.5 ? -1 : 0,
+							// 	y: y + Math.random() < 0.5 ? -1 : 0
+							// };
+							return false;
+							//getposition();
+						}
 					};
-					//console.log(that.position);
 
-					var newpos = that.position;
-					that.index = (newpos.x).toString() + (newpos.y).toString();
-
-					$('div.cell[position="' + newpos.x + ',' + newpos.y + '"]').addClass(that.name);
+					getposition();
 
 				} else {
 					console.log('wolf stopped');
@@ -253,7 +274,7 @@ function Controller(){
 					var pos = that.position,
 						treesAndBushes = controller.treesAndBushes,
 						personages = controller.personages,
-						wolf;
+						wolf, x, y, newpos;
 
 					$.each(personages, function(i) {
 						if (personages[i].name === 'wolf') {
@@ -268,20 +289,24 @@ function Controller(){
 						var ctrll = {x: controller.values().grid.rows - 1, y: controller.values().grid.cols - 1};
 
 						//console.log(ctrll);
-						console.log(that.position);
+						//console.log(that.position);
 
 						if (that.position[x] > wolf.position[x]) {
 							if (that.position[x] < ctrll[x] && that.position[x] > 0) {
 								return 1;
 							}
 							else if (that.position[x] === ctrll[x] || that.position[x] === 0){
-								parseInt(that.position[y]) += Math.random() < 0.5 ? -1 : 1;
+								var correct =  Math.random() < 0.5 ? -1 : 1;
+								//console.log(y + ': ' + correct);
+								parseInt(that.position[y]) + correct;
 								return 0;
 							}
 							else { 
-								console.log(x+': error 1'); 
-								parseInt(that.position[y]) += Math.random() < 0.5 ? -1 : 1;
-								return 0;
+								//console.log(x+': error 1'); 
+								var correct =  Math.random() < 0.5 ? -1 : 1;
+								//
+								parseInt(that.position[y]) + correct;
+								return -1;
 							}
 
 						} else if (that.position[x] < wolf.position[x]) {
@@ -289,38 +314,63 @@ function Controller(){
 								return -1;
 							}
 							else if (that.position[x] === ctrll[x] || that.position[x] === 0){
-								parseInt(that.position[y]) += Math.random() < 0.5 ? -1 : 1;
+								var correct =  Math.random() < 0.5 ? -1 : 1;
+								//console.log(y + ': ' + correct);
+								parseInt(that.position[y]) + correct;
 								return 0;
 							} 
 							else { 
-								console.log(x+': error -1');
-								parseInt(that.position[y]) += Math.random() < 0.5 ? -1 : 1;
+								//console.log(x+': error -1');
+								var correct =  Math.random() < 0.5 ? -1 : 1;
+								//console.log(y + ': ' + correct);
+								parseInt(that.position[y]) + correct;
 								return 0;
 							}
 
 						} else {
-							//console.log(x+': error 0');
-							return 0;
+							return -1;
 						}
 					};
 
-					$('div.cell[position="' + pos.x + ',' + pos.y + '"]').removeClass(that.name);
-					controller.positions[that.index] = pos.x + ',' + pos.y;
+					var getposition = function(){
 
-					var x = getXY('x');
-					var y = getXY('y');
+						x = getXY('x');
+						y = getXY('y');	
 
-					that.position = {
-						x: Math.abs(parseInt(pos.x) + x),
-						y: Math.abs(parseInt(pos.y) + y)
+						newpos = {
+							x: Math.abs(parseInt(pos.x) + x),
+							y: Math.abs(parseInt(pos.y) + y)
+						};
+
+						var newindex = newpos.x*controller.values().grid.cols + newpos.y;
+
+						if (controller.positions[newindex]){
+							
+							$('div.cell[position="' + pos.x + ',' + pos.y + '"]').removeClass(that.name);
+							controller.positions[that.index] = pos.x + ',' + pos.y;
+
+							that.index = newindex;
+							that.position = {
+								x: Math.abs(parseInt(pos.x) + x),
+								y: Math.abs(parseInt(pos.y) + y)
+							};
+
+							delete controller.positions[that.index];
+							$('div.cell[position="' + newpos.x + ',' + newpos.y + '"]').addClass(that.name);
+
+						} else {
+							console.log(that.name, that.index, controller.positions[that.index]);
+							// that.position = {
+							// 	x: x + Math.random() < 0.5 ? 0 : 1, 
+							// 	y: y + Math.random() < 0.5 ? 0 : 1
+							// };
+							return false;
+							//getposition();
+						}
+
 					};
 
-					console.log(that.position);
-
-					var newpos = that.position;
-					that.index = (newpos.x).toString() + (newpos.y).toString();
-
-					$('div.cell[position="' + newpos.x + ',' + newpos.y + '"]').addClass(that.name);
+					getposition();
 
 				} else {
 					console.log('hare stopped');
@@ -338,11 +388,11 @@ $(document).ready(function(){
 	$('input[name="grid-rows"]').val(10);
 	$('input[name="grid-cols"]').val(10);
 	$('input[name="item-tree"]').val(4);
-	$('input[name="item-bush"]').val(3);
-	$('input[name="life-tree"]').val(4);
-	$('input[name="life-bush"]').val(2);
-	$('input[name="step-wolf"]').val(3);
-	$('input[name="step-hare"]').val(2);
+	$('input[name="item-bush"]').val(5);
+	$('input[name="life-tree"]').val(6);
+	$('input[name="life-bush"]').val(4);
+	$('input[name="step-wolf"]').val(1);
+	$('input[name="step-hare"]').val(1);
 	$('input[name="time"]').val(1);
 
 	var controller = new Controller();
